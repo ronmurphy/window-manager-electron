@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Image Color Palette</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        #thumbnail {
+            margin: 20px 0;
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .palette {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .color-swatch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+
+        .color-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-text {
+            margin-top: 5px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #555;
+        }
+
+        .color-text-top {
+            margin-bottom: 5px;
+            order: -1; /* Place the text above the color box */
+        }
+    </style>
+</head>
+<body>
+    <h1>Enhanced Image Color Palette Generator</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <img id="thumbnail" src="" alt="Thumbnail" style="display: none;">
+    <div class="palette" id="palette"></div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const thumbnail = document.getElementById('thumbnail');
+        const palette = document.getElementById('palette');
+
+        imageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Load the image as a thumbnail
+            const fileURL = URL.createObjectURL(file);
+            thumbnail.src = fileURL;
+            thumbnail.style.display = 'block';
+
+            // Wait for the image to load before processing
+            thumbnail.onload = () => {
+                generatePalette(thumbnail);
+            };
+        });
+
+        function generatePalette(image) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const width = 200;
+            const height = (image.height / image.width) * width;
+
+            canvas.width = width;
+            canvas.height = height;
+
+            ctx.drawImage(image, 0, 0, width, height);
+
+            const imageData = ctx.getImageData(0, 0, width, height).data;
+            const colors = extractColors(imageData);
+
+            displayPalette(colors);
+        }
+
+        function extractColors(imageData) {
+            const colorCounts = {};
+            const colorArray = [];
+
+            for (let i = 0; i < imageData.length; i += 4) {
+                const r = imageData[i];
+                const g = imageData[i + 1];
+                const b = imageData[i + 2];
+                const color = `rgb(${r},${g},${b})`;
+
+                if (!colorCounts[color]) {
+                    colorCounts[color] = 0;
+                    colorArray.push(color);
+                }
+
+                colorCounts[color]++;
+            }
+
+            // Find most common color
+            const mostCommonColor = colorArray.sort((a, b) => colorCounts[b] - colorCounts[a])[0];
+
+            // Find second most common with a shift
+            const secondMostCommon = colorArray[1];
+            const shiftedColor = adjustColor(secondMostCommon);
+
+            // Find rarest color
+            const rarestColor = colorArray.sort((a, b) => colorCounts[a] - colorCounts[b])[0];
+
+            // Find lightest color
+            const lightestColor = colorArray.sort((a, b) => sumRGB(b) - sumRGB(a))[0];
+
+            // Find darkest color
+            const darkestColor = colorArray.sort((a, b) => sumRGB(a) - sumRGB(b))[0];
+
+            return [mostCommonColor, shiftedColor, rarestColor, lightestColor, darkestColor];
+        }
+
+        function sumRGB(color) {
+            const match = color.match(/\d+/g);
+            return match.reduce((sum, value) => sum + parseInt(value), 0);
+        }
+
+        function adjustColor(color) {
+            const match = color.match(/\d+/g).map(Number);
+            const adjustment = 30; // Increase RGB values slightly
+            const adjusted = match.map((value) => Math.min(value + adjustment, 255));
+            return `rgb(${adjusted.join(",")})`;
+        }
+
+        function displayPalette(colors) {
+            palette.innerHTML = '';
+            colors.forEach((color, index) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = color;
+
+                const colorText = document.createElement('div');
+                colorText.className = 'color-text';
+                colorText.textContent = color;
+
+                // Alternate text placement
+                if (index % 2 === 0) {
+                    colorText.classList.add('color-text-top');
+                }
+
+                swatch.appendChild(colorBox);
+                swatch.appendChild(colorText);
+                palette.appendChild(swatch);
+            });
+        }
+    </script>
+</body>
+</html>

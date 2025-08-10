@@ -1,0 +1,51 @@
+{
+  "name": "window-manager-electron",
+  "version": "1.0.0",
+  "description": "Desktop Window Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "electron": "^26.6.10",
+    "electron-builder": "^24.13.3",
+    "eslint": "^9.14.0",
+    "eslint-plugin-import": "^2.31.0",
+    "globals": "^15.12.0"
+  },
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "@ghostery/adblocker-electron": "^2.0.3",
+    "@ghostery/adblocker-webextension": "^2.0.3",
+    "electron-store": "^10.0.0",
+    "systeminformation": "^5.23.5"
+  },
+  "build": {
+    "appId": "com.solodev.windowmanager",
+    "productName": "WindowManager",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "src/preload.js",
+      "main.js",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

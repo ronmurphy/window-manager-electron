@@ -1,0 +1,18 @@
+{
+    "files": [
+        "src/**/*"
+    ],
+    "directories": {
+        "output": "dist"
+    },
+    "win": {
+        "target": "nsis"
+    },
+    "mac": {
+        "target": "dmg"
+    },
+    "linux": [
+        "deb",
+        "rpm"
+    ]
+}

@@ -1,0 +1,656 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple File Browser</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sidebar-item {
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-item:hover {
+            background-color: #34495e;
+        }
+
+        .sidebar-item svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: white;
+            overflow-y: auto;
+        }
+
+        .navigation-container {
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .path-bar {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .breadcrumb-item:hover {
+            background-color: #dde1e4;
+        }
+
+        .breadcrumb-separator {
+            color: #95a5a6;
+        }
+
+        .tabs-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 5px 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 2px;
+            overflow-x: hidden;
+            flex: 1;
+        }
+
+        .tab-nav-button {
+            background: #f5f6fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-nav-button:hover {
+            background: #ddd;
+        }
+
+        .tab-nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tab {
+            padding: 8px 15px;
+            background: #fff;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+
+        .tab.active {
+            background: #fff;
+            position: relative;
+        }
+
+        .tab:not(.active) {
+            background: #f5f6fa;
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .tab-close:hover {
+            background: #ddd;
+        }
+
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .file-item:hover {
+            background-color: #f5f6fa;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+
+        .file-name {
+            font-size: 12px;
+            word-break: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 10px;
+            }
+
+            .sidebar-item span {
+                display: none;
+            }
+
+            .files-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-item" onclick="navigateTo('home')">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span>Home</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('documents')">
+            <svg viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+            <span>Documents</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('downloads')">
+            <svg viewBox="0 0 24 24">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+            </svg>
+            <span>Downloads</span>
+        </div>
+        <div class="sidebar-item" onclick="navigateTo('pictures')">
+            <svg viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+            <span>Pictures</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="navigation-container">
+            <div class="path-bar">
+                <div class="breadcrumb" id="breadcrumb-container"></div>
+            </div>
+            <div class="tabs-wrapper">
+                <button class="tab-nav-button" onclick="navigateTab(-1)" id="prevTab">◀</button>
+                <div class="tabs" id="tabs-container"></div>
+                <button class="tab-nav-button" onclick="navigateTab(1)" id="nextTab">▶</button>
+            </div>
+        </div>
+
+        <div class="files-grid" id="files-container">
+            <!-- Files will be dynamically populated here -->
+        </div>
+    </div>
+
+    <script>
+        const tabs = [];
+        let activeTab = null;
+        let currentDirectoryHandle = null;
+        let commonFolders = new Map();
+
+        // Initialize IPC communication
+        const { ipcRenderer } = require('electron');
+        
+        async function requestFileSystemAccess() {
+            try {
+                const result = await ipcRenderer.invoke('select-folder');
+                if (result.canceled) return null;
+                await loadCommonFolders();
+                return result.filePath;
+            } catch (err) {
+                console.error('Error accessing file system:', err);
+                const container = document.getElementById('files-container');
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center;">
+                        <h3>Error Accessing Files</h3>
+                        <p>${err.message}</p>
+                        <button onclick="navigateTo('home')" style="padding: 10px 20px; margin-top: 10px;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+                return null;
+            }
+        }
+
+        // Load common folders using Electron IPC
+        async function loadCommonFolders() {
+            try {
+                const commonFoldersData = await ipcRenderer.invoke('get-common-folders');
+                commonFolders.clear();
+                
+                for (const [name, path] of Object.entries(commonFoldersData)) {
+                    commonFolders.set(name.toLowerCase(), path);
+                }
+
+                updateSidebar();
+            } catch (err) {
+                console.error('Error loading common folders:', err);
+            }
+        }
+
+        // Update sidebar with available folders
+        function updateSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.innerHTML = ''; // Clear existing items
+
+            // Add home item
+            const homeItem = createSidebarItem('home', 'Home', 'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z');
+            sidebar.appendChild(homeItem);
+
+            // Add available common folders
+            for (const [name, handle] of commonFolders) {
+                const icon = getFolderIcon(name);
+                const item = createSidebarItem(name, name.charAt(0).toUpperCase() + name.slice(1), icon);
+                sidebar.appendChild(item);
+            }
+        }
+
+        function createSidebarItem(id, label, iconPath) {
+            const div = document.createElement('div');
+            div.className = 'sidebar-item';
+            div.onclick = () => navigateTo(id);
+            div.innerHTML = `
+                <svg viewBox="0 0 24 24">
+                    <path d="${iconPath}"/>
+                </svg>
+                <span>${label}</span>
+            `;
+            return div;
+        }
+
+        function getFolderIcon(folderName) {
+            const icons = {
+                documents: 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z',
+                downloads: 'M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z',
+                pictures: 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
+                music: 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
+                videos: 'M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z',
+                desktop: 'M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z'
+            };
+            return icons[folderName.toLowerCase()] || icons.documents;
+        }
+
+        function getFileIcon(type) {
+            if (type === 'folder') {
+                return `<svg class="file-icon" viewBox="0 0 24 24">
+                    <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>
+                </svg>`;
+            }
+            return `<svg class="file-icon" viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>`;
+        }
+
+        function updateBreadcrumbs(path) {
+            const container = document.getElementById('breadcrumb-container');
+            const parts = (path || '').toString().split('/').filter(Boolean);
+            
+            container.innerHTML = `
+                <div class="breadcrumb-item" onclick="navigateTo('home')">
+                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                </div>
+            `;
+
+            let currentPath = '';
+            parts.forEach((part, index) => {
+                currentPath += '/' + part;
+                container.innerHTML += `
+                    <span class="breadcrumb-separator">›</span>
+                    <div class="breadcrumb-item" onclick="navigateTo('${part}')">${part}</div>
+                `;
+            });
+        }
+
+        function createTab(location) {
+            const existingTab = tabs.find(tab => tab.path === location);
+            if (existingTab) {
+                activateTab(existingTab);
+                return;
+            }
+
+            const tab = {
+                id: 'tab-' + Date.now(),
+                path: location,
+                name: location.charAt(0).toUpperCase() + location.slice(1)
+            };
+
+            tabs.push(tab);
+            updateTabs();
+            activateTab(tab);
+        }
+
+        function updateTabs() {
+            const container = document.getElementById('tabs-container');
+            container.innerHTML = tabs.map(tab => `
+                <div class="tab ${tab === activeTab ? 'active' : ''}" onclick="activateTab('${tab.path}')">
+                    <span>${tab.name}</span>
+                    <div class="tab-close" onclick="closeTab(event, '${tab.path}')">×</div>
+                </div>
+            `).join('');
+
+            updateTabNavigation();
+        }
+
+        function updateTabNavigation() {
+            const container = document.getElementById('tabs-container');
+            const prevBtn = document.getElementById('prevTab');
+            const nextBtn = document.getElementById('nextTab');
+            
+            const scrollPos = container.scrollLeft;
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            
+            prevBtn.disabled = scrollPos <= 0;
+            nextBtn.disabled = scrollPos >= scrollWidth - clientWidth;
+        }
+
+        function navigateTab(direction) {
+            const container = document.getElementById('tabs-container');
+            const scrollAmount = container.clientWidth * 0.8;
+            container.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+            
+            setTimeout(updateTabNavigation, 400);
+        }
+
+        function activateTab(tabPath) {
+            activeTab = tabs.find(tab => tab.path === tabPath);
+            updateTabs();
+            navigateTo(tabPath, false);
+        }
+
+        function closeTab(event, tabPath) {
+            event.stopPropagation();
+            const tab = tabs.find(tab => tab.path === tabPath);
+            const index = tabs.indexOf(tab);
+            tabs.splice(index, 1);
+            
+            if (tab === activeTab) {
+                activeTab = tabs[Math.min(index, tabs.length - 1)] || null;
+                if (activeTab) {
+                    navigateTo(activeTab.path, false);
+                }
+            }
+            
+            updateTabs();
+        }
+
+        async function navigateTo(location, createNewTab = true) {
+            try {
+                if (createNewTab) {
+                    createTab(location);
+                }
+
+                const container = document.getElementById('files-container');
+                container.innerHTML = '';
+                updateBreadcrumbs(location);
+
+                // Handle special case for home
+                if (location === 'home') {
+                    displayCommonFolders();
+                    return;
+                }
+
+                // Get directory handle
+                let dirHandle;
+                if (commonFolders.has(location)) {
+                    dirHandle = commonFolders.get(location);
+                } else if (currentDirectoryHandle) {
+                    dirHandle = currentDirectoryHandle;
+                } else {
+                    dirHandle = await requestFileSystemAccess();
+                }
+
+                if (!dirHandle) {
+                    container.innerHTML = '<div style="padding: 20px; text-align: center;">Could not access location</div>';
+                    return;
+                }
+
+                currentDirectoryHandle = dirHandle;
+                
+                // List directory contents using Electron IPC
+                const entries = await ipcRenderer.invoke('read-directory', dirHandle);
+
+                // Sort entries (folders first, then files)
+                entries.sort((a, b) => {
+                    if (a.type === b.type) return a.name.localeCompare(b.name);
+                    return a.type === 'directory' ? -1 : 1;
+                });
+
+                // Display entries
+                for (const entry of entries) {
+                    const fileElement = document.createElement('div');
+                    fileElement.className = 'file-item';
+                    fileElement.innerHTML = `
+                        ${getFileIcon(entry.type)}
+                        <div class="file-name">${entry.name}</div>
+                    `;
+                    fileElement.onclick = async () => {
+                        if (entry.type === 'directory') {
+                            currentDirectoryHandle = entry.handle;
+                            navigateTo(entry.name);
+                        } else {
+                            try {
+                                const file = await ipcRenderer.invoke('read-file', entry.path);
+                                // Handle file opening based on type
+                                handleFileOpen(file);
+                            } catch (err) {
+                                console.error('Error opening file:', err);
+                            }
+                        }
+                    };
+                    container.appendChild(fileElement);
+                }
+            } catch (err) {
+                console.error('Navigation error:', err);
+                container.innerHTML = '<div style="padding: 20px; text-align: center;">Error accessing location</div>';
+            }
+        }
+
+        function displayCommonFolders() {
+            const container = document.getElementById('files-container');
+            for (const [name, handle] of commonFolders) {
+                const folderElement = document.createElement('div');
+                folderElement.className = 'file-item';
+                folderElement.innerHTML = `
+                    ${getFileIcon('folder')}
+                    <div class="file-name">${name.charAt(0).toUpperCase() + name.slice(1)}</div>
+                `;
+                folderElement.onclick = () => {
+                    currentDirectoryHandle = handle;
+                    navigateTo(name);
+                };
+                container.appendChild(folderElement);
+            }
+        }
+
+        async function handleFileOpen(file) {
+            const type = file.type;
+            
+            // Create modal for file preview
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                max-width: 90%;
+                max-height: 90%;
+                overflow: auto;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                border: none;
+                background: none;
+                font-size: 24px;
+                cursor: pointer;
+            `;
+            closeBtn.onclick = () => modal.remove();
+            
+            content.appendChild(closeBtn);
+            
+            try {
+                if (type.startsWith('image/')) {
+                    const url = `file://${file.path}`;
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.maxWidth = '100%';
+                    img.style.maxHeight = '80vh';
+                    content.appendChild(img);
+                    
+                } else if (type.startsWith('text/') || type === 'application/json') {
+                    const text = await file.text();
+                    const pre = document.createElement('pre');
+                    pre.style.cssText = `
+                        max-height: 80vh;
+                        overflow: auto;
+                        white-space: pre-wrap;
+                        padding: 10px;
+                        background: #f5f5f5;
+                        border-radius: 4px;
+                    `;
+                    pre.textContent = text;
+                    content.appendChild(pre);
+                    
+                } else if (type.startsWith('video/')) {
+                    const url = URL.createObjectURL(file);
+                    const video = document.createElement('video');
+                    video.src = url;
+                    video.controls = true;
+                    video.style.maxWidth = '100%';
+                    video.style.maxHeight = '80vh';
+                    content.appendChild(video);
+                    
+                } else if (type.startsWith('audio/')) {
+                    const url = URL.createObjectURL(file);
+                    const audio = document.createElement('audio');
+                    audio.src = url;
+                    audio.controls = true;
+                    content.appendChild(audio);
+                    
+                } else {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(file);
+                    downloadLink.download = file.name;
+                    downloadLink.textContent = `Download ${file.name}`;
+                    downloadLink.style.cssText = `
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background: #2c3e50;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 4px;
+                    `;
+                    content.appendChild(downloadLink);
+                }
+                
+                modal.appendChild(content);
+                document.body.appendChild(modal);
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) modal.remove();
+                };
+                
+            } catch (err) {
+                console.error('Error opening file:', err);
+                alert('Error opening file: ' + err.message);
+            }
+        }
+
+        // Initial load
+        navigateTo('home');
+    </script></body></html>

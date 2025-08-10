@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Symbols Advanced Customizer</title>
+    <!-- Material Symbols - All variants -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Font Awesome Support -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+    <!-- Pickr color selector -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/> <!-- 'nano' theme -->
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #2c2c2c;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* App Layout */
+        .app-container {
+            display: grid;
+            grid-template-areas:
+                "top-toolbar top-toolbar"
+                "side-toolbar main-content";
+            grid-template-rows: 60px 1fr;
+            grid-template-columns: 60px 1fr;
+            height: 100vh;
+            background: #1e1e1e;
+        }
+
+        /* Top Toolbar */
+        .top-toolbar {
+            grid-area: top-toolbar;
+            background: #333;
+            border-bottom: 1px solid #444;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .library-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .library-btn {
+            padding: 8px 16px;
+            background: #444;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .library-btn.active {
+            background: #2196f3;
+        }
+
+        .pro-note {
+            font-size: 0.8em;
+            color: #888;
+            padding: 4px 8px;
+            background: #2c2c2c;
+            border-radius: 4px;
+        }
+
+        /* Side Toolbar */
+        .side-toolbar {
+            grid-area: side-toolbar;
+            background: #333;
+            border-right: 1px solid #444;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .tool-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 4px;
+            background: #444;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .tool-button:hover {
+            background: #555;
+        }
+
+        /* Main Content */
+        .main-content {
+            grid-area: main-content;
+            display: grid;
+            grid-template-rows: 40% 60%;
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* Icon Workspace */
+        .icon-workspace {
+            background: #2c2c2c;
+            border-radius: 8px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 80% 20%;
+            gap: 10px;
+        }
+
+        .icon-preview {
+            background: #333;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-controls {
+            background: #333;
+            border-radius: 8px;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .saved-icons {
+            background: #333;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        /* Icon Grid */
+        .icon-grid-container {
+            background: #2c2c2c;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .search-bar {
+            position: sticky;
+            top: 0;
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        /* Updated icon grid styles */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .icon-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .icon-item:hover {
+            background: #444;
+            transform: translateY(-2px);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        /* Controls styling */
+        .control-group {
+            background: #2c2c2c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            background: #444;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+        }
+
+        /* Updated toolbar styles */
+.top-toolbar {
+    grid-area: top-toolbar;
+    background: #333;
+    border-bottom: 1px solid #444;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.library-groups {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.library-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.library-group h4 {
+    margin: 0;
+    color: #888;
+}
+
+.style-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.controls-row {
+    display: flex;
+    gap: 20px;
+    padding: 10px;
+    background: #2c2c2c;
+    border-radius: 4px;
+}
+
+.color-pickers {
+    display: flex;
+    gap: 15px;
+}
+
+.picker-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.picker-group label {
+    font-size: 0.9em;
+    color: #888;
+}
+
+.sliders-group {
+    display: flex;
+    gap: 15px;
+    flex: 1;
+}
+
+.slider-control {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 100px;
+}
+
+.slider-control label {
+    font-size: 0.9em;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Icon grid updates */
+.icon-item {
+    aspect-ratio: 1;
+    padding: 10px;
+    position: relative;
+}
+
+.icon-name {
+    display: none;
+}
+
+.icon-item:hover .icon-name {
+    display: block;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #444;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Add/Update these CSS rules */
+.top-toolbar {
+    height: auto;
+    min-height: 140px;
+}
+
+.sliders-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    flex: 1;
+    padding: 10px;
+    background: #2c2c2c;
+    border-radius: 4px;
+}
+
+.slider-control {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+}
+
+.slider-control input[type="range"] {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.effect-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.effect-option {
+    padding: 8px 12px;
+    background: #2c2c2c;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.effect-option.active {
+    background: #2196f3;
+    border-color: #1976d2;
+}
+
+/* Icon preview fixes */
+.two-tone-preview {
+    position: relative;
+    width: fit-content;
+    margin: 20px auto;
+}
+
+.two-tone-preview .primary {
+    position: relative;
+    z-index: 2;
+    font-size: 48px;
+}
+
+.two-tone-preview .secondary {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    font-size: 48px;
+}
+
+/* Color picker styling */
+.picker-group {
+    min-width: 120px;
+}
+
+.pickr {
+    width: 100%;
+}
+
+.pickr button {
+    width: 100%;
+    height: 32px;
+}
+
+/* Icon grid improvements */
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+    padding: 12px;
+}
+
+.icon-item {
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.icon-item i,
+.icon-item span {
+    font-size: 24px;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="top-toolbar">
+            <div class="toolbar-section">
+                <div class="library-groups">
+                    <div class="library-group">
+                        <h4>Material Symbols</h4>
+                        <div class="style-buttons">
+                            <button class="variant-option active" data-family="outlined" data-library="material">Outlined</button>
+                            <button class="variant-option" data-family="rounded" data-library="material">Rounded</button>
+                            <button class="variant-option" data-family="sharp" data-library="material">Sharp</button>
+                        </div>
+                    </div>
+                    <div class="library-group">
+                        <h4>Font Awesome</h4>
+                        <div class="style-buttons">
+                            <button class="variant-option" data-family="solid" data-library="fa">Solid</button>
+                            <button class="variant-option" data-family="regular" data-library="fa">Regular</button>
+                            <button class="variant-option" data-family="light" data-library="fa">Light</button>
+                            <button class="variant-option" data-family="duotone" data-library="fa">Duotone</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pro-note">
+                    Note: Duotone icons require Font Awesome Pro
+                </div>
+            </div>
+            
+            <div class="controls-row">
+                <div class="color-pickers">
+                    <div class="picker-group">
+                        <label>Primary Color</label>
+                        <div id="primaryColorPicker"></div>
+                    </div>
+                    <div class="picker-group">
+                        <label>Secondary Color</label>
+                        <div id="secondColorPicker"></div>
+                    </div>
+                </div>
+                <div class="sliders-group">
+                    <div class="slider-control">
+                        <label>Weight <span id="weightValue">400</span></label>
+                        <input type="range" id="weightSlider" min="100" max="700" step="100" value="400">
+                    </div>
+                    <div class="slider-control">
+                        <label>Fill <span id="fillValue">0</span></label>
+                        <input type="range" id="fillSlider" min="0" max="1" step="1" value="0">
+                    </div>
+                    <div class="slider-control">
+                        <label>Grade <span id="gradeValue">0</span></label>
+                        <input type="range" id="gradeSlider" min="-50" max="200" step="1" value="0">
+                    </div>
+                    <div class="slider-control">
+                        <label>Size <span id="sizeValue">24</span></label>
+                        <input type="range" id="sizeSlider" min="20" max="48" step="4" value="24">
+                    </div>
+                    <div class="slider-control">
+                        <label>Offset <span id="offsetValue">2</span>px</label>
+                        <input type="range" id="offsetSlider" min="0" max="5" step="0.5" value="2">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <aside class="side-toolbar">
+            <div class="advanced-effects">
+                <h3>Effects</h3>
+                <div class="effect-options">
+                    <div class="effect-option" data-effect="shadow">Drop Shadow</div>
+                    <div class="effect-option" data-effect="glow">Glow Effect</div>
+                    <div class="effect-option" data-effect="gradient">Gradient Fill</div>
+                </div>
+            </div>
+
+            <div id="faControls" class="fa-controls">
+                <div class="control-group">
+                    <div class="opacity-control">
+                        <label>
+                            Secondary Opacity
+                            <span id="opacityValue">0.4</span>
+                        </label>
+                        <input type="range" id="opacitySlider" min="0" max="1" step="0.1" value="0.4">
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="icon-workspace">
+                <div class="icon-preview">
+                    <div class="preview-section" id="previewSection" style="display: none;">
+                        <h2>Selected Icon</h2>
+                        <div class="two-tone-preview">
+                            <span class="material-symbols-outlined primary"></span>
+                            <span class="material-symbols-outlined secondary"></span>
+                        </div>
+                        <div>
+                            <h3>CSS Code:</h3>
+                            <div class="css-code" id="cssCode"></div>
+                            <button class="copy-button" id="copyButton">Copy CSS</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="saved-icons">
+                    <div class="theme-export">
+                        <h3>Theme Export</h3>
+                        <button id="exportThemeBtn" class="copy-button">Export Theme CSS</button>
+                        <div class="css-code" id="themeCode" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="icon-grid-container">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search icons...">
+                </div>
+                <div class="icon-grid" id="iconGrid">
+                    <!-- Icons will be populated here by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden color inputs for compatibility with existing code -->
+    <input type="hidden" id="primaryColor" value="#000000">
+    <input type="hidden" id="secondaryColor" value="#666666">
+</body>
+
+    <script>
+        // Material Icons list (extended)
+        const iconLibraries = {
+            material: [
+            'home', 'search', 'settings', 'favorite', 'account_circle', 'shopping_cart',
+            'delete', 'save', 'edit', 'mail', 'phone', 'person', 'lock', 'visibility',
+            'notification_important', 'schedule', 'today', 'cloud', 'folder', 'star',
+            'warning', 'error', 'info', 'help', 'print', 'share', 'refresh', 'done',
+            'more_vert', 'menu', 'close', 'arrow_back', 'arrow_forward', 'expand_more',
+            'check_circle', 'add', 'remove', 'camera', 'image', 'videocam', 'mic',
+            'volume_up', 'brightness_medium', 'wifi', 'bluetooth', 'battery_full',
+            'access_alarm', 'account_box', 'add_circle', 'alternate_email', 'android',
+            'announcement', 'architecture', 'arrow_drop_down', 'arrow_drop_up', 'assessment',
+            'assignment', 'attachment', 'audiotrack', 'auto_awesome', 'auto_stories',
+            'backpack', 'backup', 'book', 'bookmark', 'bug_report', 'build', 'cached',
+            'calendar_today', 'call', 'campaign', 'cancel', 'chat', 'check_box',
+            'chrome_reader_mode', 'clear', 'comment', 'computer', 'contact_mail',
+            'content_copy', 'content_paste', 'copyright', 'credit_card', 'dashboard',
+            'date_range', 'delete_forever', 'description', 'desktop_mac', 'devices',
+            'dns', 'done_all', 'download', 'drafts', 'eco', 'edit_notifications',
+            'emoji_events', 'explore', 'extension', 'face', 'facebook', 'fast_forward',
+            'fast_rewind', 'favorite_border', 'file_download', 'filter_list', 'flag',
+            'flash_on', 'flight', 'folder_open', 'format_quote', 'forum', 'games', 'get_app', 'gif', 'grade', 'group',
+            'group_add', 'headset', 'hearing', 'help_outline', 'highlight', 'history',
+            'home_work', 'hourglass_empty', 'http', 'https', 'important_devices',
+            'inbox', 'info_outline', 'input', 'insert_chart', 'insert_drive_file',
+            'insert_emoticon', 'insert_invitation', 'insert_link', 'insert_photo',
+            'keyboard', 'keyboard_arrow_down', 'keyboard_arrow_left', 'keyboard_arrow_right',
+            'keyboard_arrow_up', 'keyboard_voice', 'label', 'label_important', 'language',
+            'laptop', 'last_page', 'launch', 'layers', 'link', 'list', 'local_activity',
+            'local_airport', 'local_atm', 'local_bar', 'local_cafe', 'local_dining',
+            'local_drink', 'local_fire_department', 'local_florist', 'local_gas_station',
+            'local_grocery_store', 'local_hospital', 'local_hotel', 'local_laundry_service',
+            'local_library', 'local_mall', 'local_movies', 'local_offer', 'local_parking',
+            'local_pharmacy', 'local_phone', 'local_pizza', 'local_play', 'local_post_office',
+            'local_shipping', 'local_taxi', 'location_city', 'location_on', 'lock_open',
+            'looks', 'loop', 'loyalty', 'mail_outline', 'map', 'margin', 'mark_email_read',
+            'memory', 'menu_book', 'menu_open', 'message', 'mic_none', 'mic_off',
+            'money', 'money_off', 'monitor', 'mood', 'mood_bad', 'more_horiz',
+            'mouse', 'move_to_inbox', 'movie', 'movie_filter', 'music_note', 'music_off',
+            'music_video', 'my_location', 'nature', 'nature_people', 'navigate_before',
+            'navigate_next', 'near_me', 'network_cell', 'network_wifi', 'next_plan',
+            'night_shelter', 'nightlight', 'notes', 'notifications', 'notifications_active',
+            'notifications_none', 'notifications_off', 'offline_bolt', 'offline_pin',
+            'ondemand_video', 'opacity', 'open_in_browser', 'open_in_new', 'open_with',
+            'outlet', 'pages', 'pageview', 'palette', 'panorama', 'party_mode', 'pause',
+            'pause_circle_filled', 'pause_circle_outline', 'payment', 'people_outline',
+            'perm_camera_mic', 'perm_contact_calendar', 'perm_data_setting', 'perm_identity',
+            'perm_media', 'perm_phone_msg', 'perm_scan_wifi', 'person_add', 'person_outline',
+            'person_pin', 'person_pin_circle', 'person_remove', 'pets', 'phone_android',
+            'phone_bluetooth_speaker', 'phone_callback', 'phone_forwarded', 'phone_in_talk',
+            'phone_iphone', 'phone_locked', 'phone_missed', 'phone_paused', 'photo',
+            'photo_album', 'photo_camera', 'photo_filter', 'photo_library', 'photo_size_select_actual'
+        ],
+        fa: [
+        // Updated Font Awesome icon names
+        'house', // instead of 'home'
+        'magnifying-glass', // instead of 'search'
+        'gear', // instead of 'settings'
+        'heart',
+        'circle-user', // instead of 'user-circle'
+        'cart-shopping', // instead of 'cart'
+        'trash-can', // instead of 'trash'
+        'floppy-disk', // instead of 'save'
+        'pen', // instead of 'edit'
+        'envelope', // instead of 'mail'
+        'phone',
+        'user',
+        'lock',
+        'eye',
+        'bell',
+        'clock',
+        'calendar-days', // instead of 'calendar-day'
+        'cloud',
+        'folder',
+        'star',
+        'triangle-exclamation', // instead of 'warning'
+        'circle-exclamation', // instead of 'error'
+        'circle-info', // instead of 'info'
+        'circle-question', // instead of 'help'
+        'print',
+        'share',
+        'arrows-rotate', // instead of 'refresh'
+        'check',
+        'ellipsis-vertical', // instead of 'more-vert'
+        'bars', // instead of 'menu'
+        'xmark', // instead of 'close'
+        'arrow-left',
+        'arrow-right',
+        'chevron-down', // instead of 'expand-more'
+        'circle-check', // instead of 'check-circle'
+        'plus',
+        'minus',
+        'camera',
+        'image',
+        'video', // instead of 'videocam'
+        'microphone', // instead of 'mic'
+        'volume-high', // instead of 'volume-up'
+        'sun', // instead of 'brightness-medium'
+        'wifi',
+        'bluetooth',
+        'battery-full',
+        // Add more icons with their correct FA names...
+        'clock', // instead of 'access-alarm'
+        'square-user', // instead of 'account-box'
+        'circle-plus', // instead of 'add-circle'
+        'at', // instead of 'alternate-email'
+        'android',
+        'bullhorn', // instead of 'announcement'
+        'compass', // instead of 'architecture'
+        'caret-down', // instead of 'arrow-drop-down'
+        'caret-up', // instead of 'arrow-drop-up'
+        'chart-line', // instead of 'assessment'
+        'clipboard', // instead of 'assignment'
+        'paperclip', // instead of 'attachment'
+        'music', // instead of 'audiotrack'
+        'wand-magic-sparkles', // instead of 'auto-awesome'
+        'book-open', // instead of 'auto-stories'
+        'backpack',
+        'upload', // instead of 'backup'
+        'book',
+        'bookmark',
+        'bug',
+        'wrench', // instead of 'build'
+        'rotate', // instead of 'cached'
+        'calendar',
+        'phone-volume', // instead of 'call'
+        'megaphone', // instead of 'campaign'
+        'circle-xmark', // instead of 'cancel'
+        'comment',
+        'square-check', // instead of 'check-box'
+        'book-reader', // instead of 'chrome-reader-mode'
+        'broom', // instead of 'clear'
+        'message',
+        'desktop', // instead of 'computer'
+        'address-card', // instead of 'contact-mail'
+        'copy',
+        'paste',
+        'copyright',
+        'credit-card',
+        'gauge-high', // instead of 'dashboard'
+        // Continue with more icons...
+    ]
+};
+const faDuotoneClasses = {
+    'house': 'fa-duotone fa-house',
+    'magnifying-glass': 'fa-duotone fa-magnifying-glass',
+    'gear': 'fa-duotone fa-gear',
+    // ... add more mappings as needed
+};
+
+        // Add this near the top of your script with other global variables
+// Add/update global variables at the top of your script
+let selectedIcon = null;
+let currentLibrary = 'material';
+let currentFamily = 'outlined';
+
+        // Initialize the icon grid
+        function initializeGrid() {
+    const grid = document.getElementById('iconGrid');
+    grid.innerHTML = ''; // Clear existing icons
+    
+    const activeButton = document.querySelector('.variant-option.active');
+    const currentLibrary = activeButton.dataset.library;
+    const currentFamily = activeButton.dataset.family;
+    
+    console.log('InitializeGrid:', { currentLibrary, currentFamily }); // Debug line
+    
+    if (!iconLibraries[currentLibrary]) {
+        console.error('Library not found:', currentLibrary); // Debug line
+        return;
+    }
+    
+    iconLibraries[currentLibrary].forEach(icon => {
+        const div = document.createElement('div');
+        div.className = 'icon-item';
+        
+        if (currentLibrary === 'material') {
+            div.innerHTML = `
+                <span class="material-symbols-${currentFamily}">${icon}</span>
+                <span class="icon-name">${icon}</span>
+            `;
+        } else { // Font Awesome
+    let iconClass;
+    switch(currentFamily) {
+        case 'solid':
+            iconClass = `fas fa-${icon}`;
+            break;
+        case 'regular':
+            iconClass = `far fa-${icon}`;
+            break;
+        case 'light':
+            iconClass = `fal fa-${icon}`; // Pro only
+            break;
+        case 'duotone':
+            iconClass = `fad fa-${icon}`; // Pro only
+            break;
+        default:
+            iconClass = `fas fa-${icon}`;
+    }
+    
+    // Add a check for free version
+    const isFreeVersion = true; // Set this based on your Font Awesome version
+    if (isFreeVersion && (currentFamily === 'light' || currentFamily === 'duotone')) {
+        iconClass = `fas fa-${icon}`; // Fallback to solid if trying to use pro features
+    }
+            
+            console.log('Creating FA icon:', icon, 'with class:', iconClass); // Debug line
+            
+            div.innerHTML = `
+                <span class="icon-wrapper">
+                    <i class="${iconClass}"></i>
+                </span>
+                <span class="icon-name">${icon}</span>
+            `;
+        }
+        
+        div.addEventListener('click', () => selectIcon(icon, div, currentLibrary));
+        grid.appendChild(div);
+    });
+}
+
+        // Handle icon selection
+// Update the existing selectIcon function
+function selectIcon(icon, element, library) {
+    document.querySelectorAll('.icon-item.selected')
+        .forEach(item => item.classList.remove('selected'));
+    element.classList.add('selected');
+    selectedIcon = icon;
+    currentLibrary = library; // Add this line at top of script: let currentLibrary = 'material';
+
+    // Show/hide library specific controls
+    const faControls = document.getElementById('faControls');
+    faControls.classList.toggle('active', library === 'fa');
+
+    updatePreview();
+    document.getElementById('previewSection').style.display = 'block';
+}
+
+        // Update the preview and CSS code
+// Update the existing updatePreview function
+function updatePreview() {
+    if (!selectedIcon) return;
+
+    const primaryIcon = previewSection.querySelector('.primary');
+const secondaryIcon = previewSection.querySelector('.secondary');
+    const weight = document.getElementById('weightSlider').value;
+    const fill = document.getElementById('fillSlider').value;
+    const grade = document.getElementById('gradeSlider').value;
+    const size = document.getElementById('sizeSlider').value;
+    const primaryColor = document.getElementById('primaryColor').value;
+    const secondaryColor = document.getElementById('secondaryColor').value;
+    const offset = document.getElementById('offsetSlider').value;
+    const opacity = document.getElementById('opacitySlider')?.value || 0.4;
+
+    // Get selected family
+    const activeButton = document.querySelector('.variant-option.active');
+    const family = activeButton.dataset.family;
+    const library = activeButton.dataset.library;
+
+    // Update preview container based on library type
+    const previewSection = document.getElementById('previewSection');
+
+    // Apply base styles
+[primaryIcon, secondaryIcon].forEach(icon => {
+    if (currentLibrary === 'material') {
+        icon.style.fontVariationSettings = 
+            `'FILL' ${fill}, 'wght' ${weight}, 'GRAD' ${grade}, 'opsz' ${size}`;
+    }
+    icon.textContent = selectedIcon;
+});
+
+// Apply colors and positioning
+primaryIcon.style.color = primaryColor;
+secondaryIcon.style.color = secondaryColor;
+if (currentLibrary === 'fa') {
+    secondaryIcon.style.transform = `translate(${offset}px, ${offset}px)`;
+} else {
+    secondaryIcon.style.left = `${offset}px`;
+    secondaryIcon.style.top = `${offset}px`;
+}
+    
+    if (library === 'material') {
+        updateMaterialPreview(previewSection, {
+            family, selectedIcon, weight, fill, grade, size,
+            primaryColor, secondaryColor, offset
+        });
+    } else {
+        updateFontAwesomePreview(previewSection, {
+            family, selectedIcon, primaryColor, secondaryColor,
+            offset, opacity
+        });
+    }
+
+    // Update CSS code
+    updateCSSCode(family, library, {
+        weight, fill, grade, size,
+        primaryColor, secondaryColor, offset,
+        opacity,
+        effects: Array.from(document.querySelectorAll('.effect-option.active'))
+            .map(opt => opt.dataset.effect)
+    });
+}
+
+// Add these new functions
+function updateMaterialPreview(previewSection, options) {
+    previewSection.querySelector('.two-tone-preview').innerHTML = `
+        <span class="material-symbols-${options.family} primary">${options.selectedIcon}</span>
+        <span class="material-symbols-${options.family} secondary">${options.selectedIcon}</span>
+    `;
+
+    const primaryIcon = previewSection.querySelector('.primary');
+    const secondaryIcon = previewSection.querySelector('.secondary');
+
+    // Apply base styles
+    [primaryIcon, secondaryIcon].forEach(icon => {
+        icon.style.fontVariationSettings = 
+            `'FILL' ${options.fill}, 'wght' ${options.weight}, 'GRAD' ${options.grade}, 'opsz' ${options.size}`;
+        icon.style.fontSize = `${options.size * 2}px`;
+    });
+
+    // Apply colors and positioning
+    primaryIcon.style.color = options.primaryColor;
+    secondaryIcon.style.color = options.secondaryColor;
+    secondaryIcon.style.left = `${options.offset}px`;
+    secondaryIcon.style.top = `${options.offset}px`;
+}
+
+function updateFontAwesomePreview(previewSection, options) {
+    let iconClass;
+    if (options.family === 'duotone') {
+        iconClass = faDuotoneClasses[options.selectedIcon];
+    } else {
+        iconClass = `fa-${options.family} fa-${options.selectedIcon}`;
+    }
+
+    if (options.family === 'duotone') {
+        previewSection.querySelector('.two-tone-preview').innerHTML = `
+            <i class="${iconClass}" style="font-size: 48px;"></i>
+        `;
+        const icon = previewSection.querySelector('i');
+        icon.style.setProperty('--fa-primary-color', options.primaryColor);
+        icon.style.setProperty('--fa-secondary-color', options.secondaryColor);
+        icon.style.setProperty('--fa-secondary-opacity', options.opacity);
+    } else {
+        previewSection.querySelector('.two-tone-preview').innerHTML = `
+            <i class="${iconClass} fa-primary" style="font-size: 48px; color: ${options.primaryColor};"></i>
+            <i class="${iconClass} fa-secondary" style="font-size: 48px; color: ${options.secondaryColor}; left: ${options.offset}px; top: ${options.offset}px;"></i>
+        `;
+    }
+}
+
+function updateCSSCode(family, library, options) {
+    const cssCode = document.getElementById('cssCode');
+    
+    if (library === 'material') {
+        generateMaterialCSS(cssCode, family, selectedIcon, options); // Add selectedIcon here
+    } else {
+        generateFontAwesomeCSS(cssCode, family, selectedIcon, options); // Add selectedIcon here
+    }
+}
+
+// Update generateMaterialCSS function
+function generateMaterialCSS(cssCode, family, selectedIcon, options) { // Add selectedIcon parameter
+    let css = `
+/* Icon base styles */
+.material-symbols-${family}.icon-${selectedIcon.replace(/_/g, '-')} {
+    font-variation-settings: 
+        'FILL' ${options.fill},
+        'wght' ${options.weight},
+        'GRAD' ${options.grade},
+        'opsz' ${options.size};
+}
+
+/* Two-tone effect */
+.material-symbols-${family}.two-tone {
+    position: relative;
+    display: inline-block;
+}
+
+.material-symbols-${family}.two-tone::before {
+    content: "${selectedIcon}";
+    color: ${options.primaryColor};
+    position: absolute;
+    z-index: 2;
+}
+
+.material-symbols-${family}.two-tone::after {
+    content: "${selectedIcon}";
+    color: ${options.secondaryColor};
+    position: absolute;
+    left: ${options.offset}px;
+    top: ${options.offset}px;
+    z-index: 1;
+}`;
+
+    // Add effect styles if any are active
+    if (options.effects.length > 0) {
+        css += '\n\n/* Applied effects */';
+        if (options.effects.includes('shadow')) {
+            css += `\n.material-symbols-${family}.shadow {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+}`;
+        }
+        if (options.effects.includes('glow')) {
+            css += `\n.material-symbols-${family}.glow {
+    filter: drop-shadow(0 0 5px ${options.primaryColor});
+}`;
+        }
+        if (options.effects.includes('gradient')) {
+            css += `\n.material-symbols-${family}.gradient {
+    background: linear-gradient(45deg, ${options.primaryColor}, ${options.secondaryColor});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}`;
+        }
+    }
+
+    cssCode.textContent = css;
+}
+
+function generateFontAwesomeCSS(cssCode, family, selectedIcon, options) { // Add selectedIcon parameter
+    let css = '';
+    const iconSelector = `.fa-${selectedIcon.replace(/_/g, '-')}`;
+
+    if (family === 'duotone') {
+        css = `/* Font Awesome Duotone Icon Styles */
+${iconSelector}.fa-duotone {
+    --fa-primary-color: ${options.primaryColor};
+    --fa-secondary-color: ${options.secondaryColor};
+    --fa-secondary-opacity: ${options.opacity};
+}`;
+    } else {
+        css = `/* Font Awesome Two-Tone Effect */
+.fa-${family}${iconSelector} {
+    position: relative;
+    display: inline-block;
+}
+
+.fa-${family}${iconSelector}.fa-primary {
+    color: ${options.primaryColor};
+    position: relative;
+    z-index: 2;
+}
+
+.fa-${family}${iconSelector}.fa-secondary {
+    color: ${options.secondaryColor};
+    position: absolute;
+    left: ${options.offset}px;
+    top: ${options.offset}px;
+    z-index: 1;
+    opacity: ${options.opacity};
+}`;
+    }
+
+    // Add effects if any are active
+    if (options.effects.length > 0) {
+        css += '\n\n/* Applied effects */';
+        options.effects.forEach(effect => {
+            switch (effect) {
+                case 'shadow':
+                    css += `\n.fa-shadow {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+}`;
+                    break;
+                case 'glow':
+                    css += `\n.fa-glow {
+    filter: drop-shadow(0 0 5px ${options.primaryColor});
+}`;
+                    break;
+                case 'gradient':
+                    if (family !== 'duotone') {
+                        css += `\n.fa-gradient {
+    background: linear-gradient(45deg, ${options.primaryColor}, ${options.secondaryColor});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}`;
+                    }
+                    break;
+            }
+        });
+    }
+
+    cssCode.textContent = css;
+}
+
+        // Generate complete theme CSS
+        function generateThemeCSS() {
+            const family = document.querySelector('.variant-option.active').dataset.family;
+            const weight = document.getElementById('weightSlider').value;
+            const fill = document.getElementById('fillSlider').value;
+            const grade = document.getElementById('gradeSlider').value;
+            const size = document.getElementById('sizeSlider').value;
+            const primaryColor = document.getElementById('primaryColor').value;
+            const secondaryColor = document.getElementById('secondaryColor').value;
+            const offset = document.getElementById('offsetSlider').value;
+
+            return `/* Material Symbols Theme */
+/* Base icon styles */
+.material-symbols-${family} {
+    font-variation-settings: 
+        'FILL' ${fill},
+        'wght' ${weight},
+        'GRAD' ${grade},
+        'opsz' ${size};
+    color: ${primaryColor};
+}
+
+/* Two-tone variant */
+.material-symbols-${family}.two-tone {
+    position: relative;
+    display: inline-block;
+}
+
+.material-symbols-${family}.two-tone::before {
+    content: attr(data-icon);
+    position: absolute;
+    color: ${primaryColor};
+    z-index: 2;
+}
+
+.material-symbols-${family}.two-tone::after {
+    content: attr(data-icon);
+    position: absolute;
+    left: ${offset}px;
+    top: ${offset}px;
+    color: ${secondaryColor};
+    z-index: 1;
+}
+
+/* Effect variants */
+.material-symbols-${family}.shadow {
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+}
+
+.material-symbols-${family}.glow {
+    filter: drop-shadow(0 0 5px ${primaryColor});
+}
+
+.material-symbols-${family}.gradient {
+    background: linear-gradient(45deg, ${primaryColor}, ${secondaryColor});
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Usage example:
+<span class="material-symbols-${family} two-tone" data-icon="home"></span>
+*/`;
+        }
+
+        // Handle search
+        function handleSearch(event) {
+            const searchTerm = event.target.value.toLowerCase();
+            document.querySelectorAll('.icon-item').forEach(item => {
+                const iconName = item.querySelector('.icon-name').textContent;
+                item.style.display = iconName.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+
+        // Copy CSS to clipboard
+        function copyCSS() {
+            const cssCode = document.getElementById('cssCode').textContent;
+            navigator.clipboard.writeText(cssCode).then(() => {
+                const button = document.getElementById('copyButton');
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy CSS';
+                }, 2000);
+            });
+        }
+
+        // Update slider value displays
+        function updateSliderValue(sliderId, valueId) {
+            const value = document.getElementById(sliderId).value;
+            document.getElementById(valueId).textContent = value;
+            updatePreview();
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeGrid();
+            
+            // Add event listeners
+            document.getElementById('searchInput')
+                .addEventListener('input', handleSearch);
+            
+            document.getElementById('weightSlider')
+                .addEventListener('input', () => updateSliderValue('weightSlider', 'weightValue'));
+            
+            document.getElementById('fillSlider')
+                .addEventListener('input', () => updateSliderValue('fillSlider', 'fillValue'));
+            
+            document.getElementById('gradeSlider')
+                .addEventListener('input', () => updateSliderValue('gradeSlider', 'gradeValue'));
+            
+            document.getElementById('sizeSlider')
+                .addEventListener('input', () => updateSliderValue('sizeSlider', 'sizeValue'));
+            
+            document.getElementById('offsetSlider')
+                .addEventListener('input', () => updateSliderValue('offsetSlider', 'offsetValue'));
+            
+            // document.getElementById('primaryColor')
+            //     .addEventListener('input', updatePreview);
+            
+            // document.getElementById('secondaryColor')
+            //     .addEventListener('input', updatePreview);
+
+// Add this right after your existing DOMContentLoaded event handler
+// document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Pickr for primary color
+    const primaryPickr = Pickr.create({
+        el: '#primaryColorPicker',
+        theme: 'nano',
+        defaultRepresentation: 'HEX',
+        default: '#000000',
+        swatches: [
+            '#000000', '#FFFFFF', '#2196F3', '#E91E63', '#4CAF50',
+            '#FFC107', '#9C27B0', '#795548', '#607D8B'
+        ],
+        components: {
+            preview: true,
+            opacity: true,
+            hue: true,
+            interaction: {
+                hex: true,
+                rgba: true,
+                input: true,
+                save: true
+            }
+        }
+    });
+
+    // Initialize Pickr for secondary color
+    const secondaryPickr = Pickr.create({
+        el: '#secondColorPicker',
+        theme: 'nano',
+        defaultRepresentation: 'HEX',
+        default: '#666666',
+        swatches: [
+            '#000000', '#FFFFFF', '#2196F3', '#E91E63', '#4CAF50',
+            '#FFC107', '#9C27B0', '#795548', '#607D8B'
+        ],
+        components: {
+            preview: true,
+            opacity: true,
+            hue: true,
+            interaction: {
+                hex: true,
+                rgba: true,
+                input: true,
+                save: true
+            }
+        }
+    });
+
+    // Handle color changes
+    primaryPickr.on('change', (color) => {
+        const newColor = color.toHEXA().toString();
+        document.getElementById('primaryColor').value = newColor;
+        updatePreview();
+    });
+
+    secondaryPickr.on('change', (color) => {
+        const newColor = color.toHEXA().toString();
+        document.getElementById('secondaryColor').value = newColor;
+        updatePreview();
+    });
+});
+            
+            document.getElementById('copyButton')
+                .addEventListener('click', copyCSS);
+
+                // Add this to your existing DOMContentLoaded event listener
+document.getElementById('opacitySlider')
+    .addEventListener('input', () => updateSliderValue('opacitySlider', 'opacityValue'));
+            
+            document.getElementById('exportThemeBtn')
+                .addEventListener('click', () => {
+                    const themeCode = document.getElementById('themeCode');
+                    themeCode.textContent = generateThemeCSS();
+                    themeCode.style.display = 'block';
+                    themeCode.scrollIntoView({ behavior: 'smooth' });
+                });
+
+            // Handle icon family switching
+// Add this to your document.addEventListener('DOMContentLoaded', () => { ... }) section
+// Or update if you already have variant-option click handlers
+
+document.querySelectorAll('.variant-option').forEach(option => {
+    option.addEventListener('click', () => {
+        // Remove active class from all options
+        document.querySelectorAll('.variant-option').forEach(opt => 
+            opt.classList.remove('active'));
+        
+        // Add active class to clicked option
+        option.classList.add('active');
+        
+        // Get the library and family from the clicked button
+        const library = option.dataset.library;
+        const family = option.dataset.family;
+        
+        console.log('Switching to:', library, family); // Debug line
+
+        // Show/hide library specific controls
+        const faControls = document.getElementById('faControls');
+        if (faControls) {
+            faControls.classList.toggle('active', library === 'fa');
+        }
+
+        // Show/hide Material specific controls
+        const materialControls = document.querySelectorAll('.material-controls');
+        materialControls.forEach(control => {
+            control.style.display = library === 'material' ? 'block' : 'none';
+        });
+
+        // Reinitialize the grid with new library/family
+        initializeGrid();
+        
+        // If there was a selected icon, update the preview
+        if (selectedIcon) {
+            updatePreview();
+        }
+    });
+});
+
+            // Handle effect options
+            document.querySelectorAll('.effect-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    option.classList.toggle('active');
+                    if (selectedIcon) updatePreview();
+                });
+            });
+    </script>
+</body>
+</html>

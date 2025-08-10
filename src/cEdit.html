@@ -1,0 +1,1512 @@
+<html lang="en"><head><div style="display: none;"></div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Code Editor</title>
+    <meta name="description" content="A powerful web-based code editor with syntax highlighting, minimap, and file management capabilities">
+    
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-palenight.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-ocean.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/ayu-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/tomorrow-night-bright.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+    
+    <style>
+        .component-group summary {
+            user-select: none;
+        }
+        
+        .component-btn {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #3c3c3c;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            text-align: left;
+            border-radius: 3px;
+        }
+
+        .component-btn:hover {
+            background: #4c4c4c;
+        }
+
+        .canvas-component {
+            position: absolute;
+            background: #2d2d2d;
+            border: 2px solid #007acc;
+            min-width: 100px;
+            min-height: 50px;
+            color: #fff;
+            user-select: none;
+            padding: 8px;
+        }
+
+        .canvas-component .drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 24px;
+            background: #007acc;
+            cursor: move;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .canvas-component.nested .drag-handle {
+            background: #1e90ff;
+        }
+
+        .canvas-component.docked .drag-handle {
+            background: #ffd700;
+            color: #000;
+        }
+
+        .dock-toggle {
+            cursor: pointer;
+            padding: 2px 6px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .dock-toggle:hover {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .canvas-component.docked {
+            border-style: dashed;
+        }
+
+        .canvas-component .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #007acc;
+            right: -6px;
+            bottom: -6px;
+            cursor: se-resize;
+            border-radius: 50%;
+        }
+
+        .canvas-component .component-content {
+            margin-top: 24px;
+            height: calc(100% - 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Component specific styles */
+        .canvas-component[data-type="button"] .component-content button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .canvas-component[data-type="input"] .component-content input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+        }
+
+        .canvas-component[data-type="select"] .component-content select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .canvas-component[data-type="counter"] .component-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-component[data-type="counter"] .counter-btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .canvas-component[data-type="counter"] .counter-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .canvas-component[data-type="timer"] .component-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #333;
+        }
+
+        .canvas-component[data-type="timer"] .material-icons-outlined {
+            font-size: 24px;
+            color: #007acc;
+        }
+
+        .canvas-component[data-type="toggle"] .component-content {
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .canvas-component[data-type="toggle"] .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            transition: left 0.3s;
+        }
+
+        .canvas-component[data-type="toggle"].active .component-content {
+            background: #4CAF50;
+        }
+
+        .canvas-component[data-type="toggle"].active .toggle-slider {
+            left: 32px;
+        }
+
+        .canvas-component[data-type="slider"] .component-content {
+            padding: 10px 0;
+        }
+
+        .canvas-component[data-type="slider"] .component-content input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #007acc;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .canvas-component[data-type="slider"] .component-content input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 2px solid #007acc;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Properties sidebar */
+        .properties-sidebar {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 250px;
+            background: #1e1e1e;
+            border-left: 1px solid #3c3c3c;
+            padding: 16px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+        }
+
+        .properties-sidebar.active {
+            display: block;
+        }
+
+        .property-group {
+            margin-bottom: 16px;
+        }
+
+        .property-group h3 {
+            margin-bottom: 8px;
+            color: #007acc;
+        }
+
+        .property-field {
+            margin-bottom: 8px;
+        }
+
+        .property-field label {
+            display: block;
+            margin-bottom: 4px;
+            color: #ccc;
+        }
+
+        .property-field input,
+        .property-field select,
+        .property-field textarea {
+            width: 100%;
+            background: #2d2d2d;
+            border: 1px solid #3c3c3c;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 14px;
+        }
+
+        .property-field input[type="number"] {
+            width: 80px;
+        }
+
+        .property-field .text-content {
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .property-field textarea {
+            min-height: 100px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .code-preview {
+            margin-top: 20px;
+            border-top: 1px solid #3c3c3c;
+            padding-top: 16px;
+        }
+
+        .code-preview h3 {
+            color: #007acc;
+            margin-bottom: 8px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .toolbar {
+            background-color: #2d2d2d;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .toolbar button {
+            padding: 5px 10px;
+            background-color: #3c3c3c;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .toolbar button:hover {
+            background-color: #4c4c4c;
+        }
+
+        .tabs {
+            background-color: #252526;
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 8px 20px;
+            background-color: #2d2d2d;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-right: 1px solid #1e1e1e;
+            position: relative;
+        }
+
+        .tab.active {
+            background-color: #1e1e1e;
+        }
+
+        .tab .close {
+            margin-left: 8px;
+            opacity: 0.7;
+        }
+
+        .editor-main {
+            display: flex;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            width: calc(100% - 160px);
+            font-size: 14px;
+            position: absolute;
+            left: 48px;
+            top: 0;
+        }
+
+        .CodeMirror-gutters {
+            width: 32px !important;
+            padding-right: 16px;
+        }
+
+        .CodeMirror-linenumber {
+            width: 80px !important;
+            padding: 0 8px 0 8px;
+        }
+
+        .CodeMirror-vscrollbar {
+            display: none !important;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            height: 95%;
+            background: #2d2d2d;
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            padding: 20px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+        }
+
+        .minimap {
+            width: 120px;
+            background-color: #252526;
+            overflow: hidden;
+            font-size: 2px;
+            border-left: 1px solid #1e1e1e;
+            position: absolute;
+            right: 1px;
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+        }
+
+        .minimap .CodeMirror {
+            transform: scale(0.2);
+            transform-origin: left top;
+            width: 600px;
+        }
+
+        .minimap-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: grab;
+        }
+
+        .minimap-overlay:active {
+            cursor: grabbing;
+        }
+
+        .theme-select {
+            padding: 5px;
+            background-color: #3c3c3c;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .theme-select:hover {
+            background-color: #4c4c4c;
+        }
+
+        .run-button {
+            padding: 5px 10px;
+            background-color: #3c3c3c;
+            border: none;
+            color: #00ff00; /* Green color for the icon */
+            cursor: pointer;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .run-button:hover {
+            background-color: #4c4c4c;
+        }
+
+        .run-button .material-icons-outlined {
+            /* Black outline effect */
+            -webkit-text-stroke: 1px #000;
+        }
+
+        .status-bar {
+            background-color: #007acc;
+            padding: 3px 10px;
+            font-size: 12px;
+        }
+
+        .export-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .export-btn {
+            padding: 6px 12px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .export-btn:hover {
+            background: #005c99;
+        }
+
+        #file-input {
+            display: none;
+        }
+    </style>
+<body>
+    <div class="editor-container">
+        <div class="toolbar">
+            <button id="new-file" onclick="createNewFile()" title="Create a new file"><span class="material-icons-outlined">note_add</span> New File</button>
+            <button id="open-file" title="Open an existing file"><span class="material-icons-outlined">folder_open</span> Open File</button>
+            <button id="save-file" onclick="saveCurrentFile()" title="Save current file"><span class="material-icons-outlined">save</span> Save File</button>
+            <button id="format-code" title="Format code with proper indentation"><span class="material-icons-outlined">format_align_left</span> Format Code</button>
+            <button id="show-modal" title="Open the visual GUI designer"><span class="material-icons-outlined">dashboard_customize</span> GUI Designer</button>
+            <select id="theme-select" class="theme-select">
+                <option value="monokai">Monokai</option>
+                <option value="material">Material</option>
+                <option value="dracula">Dracula</option>
+                <option value="material-darker">Material Darker</option>
+                <option value="material-palenight">Material Palenight</option>
+                <option value="material-ocean">Material Ocean</option>
+                <option value="ayu-dark">Ayu Dark</option>
+                <option value="tomorrow-night-bright">Tomorrow Night Bright</option>
+            </select>
+            <button id="run-code" class="run-button" title="Run the code (placeholder - functionality coming soon)"><span class="material-icons-outlined">play_arrow</span></button>
+            <input type="file" id="file-input" accept=".html,.css,.js,.txt">
+        </div>
+        <div class="tabs" id="tabs"></div>
+        <div class="editor-main">
+            <div id="editor"></div>
+            <div class="minimap" id="minimap"></div>
+        </div>
+        <div class="status-bar">
+            <span id="cursor-position">Line: 1, Column: 1</span>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div style="display: flex; height: 100%;">
+                <div style="width: 200px; background: #1e1e1e; padding: 10px; overflow-y: auto;">
+                    <details class="component-group">
+                        <summary style="color: #fff; cursor: pointer; padding: 8px;">
+                            <span style="margin-right: 5px;">▶</span> HTML Components
+                        </summary>
+                        <div class="component-list">
+                            <button class="component-btn" data-type="div" title="A container element to group and style other elements"><span class="material-icons-outlined">widgets</span> Div Container</button>
+                            <button class="component-btn" data-type="button" title="An interactive button element"><span class="material-icons-outlined">smart_button</span> Button</button>
+                            <button class="component-btn" data-type="input" title="A text input field for user data entry"><span class="material-icons-outlined">input</span> Input Field</button>
+                            <button class="component-btn" data-type="select" title="A dropdown menu for selecting options"><span class="material-icons-outlined">arrow_drop_down_circle</span> Select Dropdown</button>
+                            <button class="component-btn" data-type="heading" title="A heading text element (h1-h6)"><span class="material-icons-outlined">title</span> Heading</button>
+                            <button class="component-btn" data-type="paragraph" title="A paragraph text element"><span class="material-icons-outlined">article</span> Paragraph</button>
+                            <button class="component-btn" data-type="image" title="An image element"><span class="material-icons-outlined">image</span> Image</button>
+                            <button class="component-btn" data-type="link" title="A hyperlink element"><span class="material-icons-outlined">link</span> Link</button>
+                            <button class="component-btn" data-type="list" title="An ordered or unordered list"><span class="material-icons-outlined">format_list_bulleted</span> List</button>
+                            <button class="component-btn" data-type="table" title="A table for displaying data in rows and columns"><span class="material-icons-outlined">table_chart</span> Table</button>
+                            <button class="component-btn" data-type="form" title="A form container for user input elements"><span class="material-icons-outlined">dynamic_form</span> Form</button>
+                            <button class="component-btn" data-type="nav" title="A navigation menu container"><span class="material-icons-outlined">menu</span> Navigation</button>
+                            <button class="component-btn" data-type="footer" title="A footer section container"><span class="material-icons-outlined">horizontal_rule</span> Footer</button>
+                            <button class="component-btn" data-type="card" title="A card container for content"><span class="material-icons-outlined">crop_portrait</span> Card</button>
+                            <button class="component-btn" data-type="grid" title="A grid layout container"><span class="material-icons-outlined">grid_view</span> Grid Container</button>
+                            <button class="component-btn" data-type="video" title="A video player element"><span class="material-icons-outlined">play_circle</span> Video Player</button>
+                            <button class="component-btn" data-type="audio" title="An audio player element"><span class="material-icons-outlined">volume_up</span> Audio Player</button>
+                            <button class="component-btn" data-type="iframe" title="Embed external content"><span class="material-icons-outlined">web_asset</span> iFrame</button>
+                            <button class="component-btn" data-type="canvas" title="HTML5 Canvas for graphics/games"><span class="material-icons-outlined">brush</span> Canvas</button>
+                            <button class="component-btn" data-type="svg" title="Scalable Vector Graphics container"><span class="material-icons-outlined">gesture</span> SVG</button>
+                            <button class="component-btn" data-type="fieldset" title="Group form elements with a legend"><span class="material-icons-outlined">check_box_outline_blank</span> Fieldset</button>
+                            <button class="component-btn" data-type="textarea" title="Multi-line text input area"><span class="material-icons-outlined">text_fields</span> Textarea</button>
+                            <button class="component-btn" data-type="meter" title="Gauge/meter visualization"><span class="material-icons-outlined">speed</span> Meter</button>
+                            <button class="component-btn" data-type="progress" title="Progress bar indicator"><span class="material-icons-outlined">trending_flat</span> Progress</button>
+                            <button class="component-btn" data-type="details" title="Expandable details/summary section"><span class="material-icons-outlined">expand_more</span> Details</button>
+                            <button class="component-btn" data-type="dialog" title="Modal dialog box"><span class="material-icons-outlined">chat</span> Dialog</button>
+                            <button class="component-btn" data-type="webview" title="Embed web content in an iframe with enhanced features"><span class="material-icons-outlined">web</span> WebView</button>
+                            <button class="component-btn" data-type="breadcrumb" title="Navigation breadcrumb trail"><span class="material-icons-outlined">chevron_right</span> Breadcrumb</button>
+                            <button class="component-btn" data-type="chevron" title="Expandable section with chevron indicator"><span class="material-icons-outlined">expand_more</span> Chevron</button>
+                        </div>
+                    </details>
+                    <details class="component-group">
+                        <summary style="color: #fff; cursor: pointer; padding: 8px;">
+                            <span style="margin-right: 5px;">▶</span> JavaScript Components
+                        </summary>
+                        <div class="component-list">
+                            <button class="component-btn" data-type="counter" title="An interactive counter with increment/decrement"><span class="material-icons-outlined">plus_one</span> Counter</button>
+                            <button class="component-btn" data-type="timer" title="A countdown or stopwatch timer"><span class="material-icons-outlined">timer</span> Timer</button>
+                            <button class="component-btn" data-type="toggle" title="A toggle switch for boolean values"><span class="material-icons-outlined">toggle_on</span> Toggle Switch</button>
+                            <button class="component-btn" data-type="slider" title="A slider for selecting numeric values"><span class="material-icons-outlined">tune</span> Slider</button>
+                            <button class="component-btn" data-type="chart" title="A data visualization chart"><span class="material-icons-outlined">bar_chart</span> Chart</button>
+                            <button class="component-btn" data-type="calendar" title="A calendar date picker"><span class="material-icons-outlined">calendar_today</span> Calendar</button>
+                            <button class="component-btn" data-type="carousel" title="A slideshow of content or images"><span class="material-icons-outlined">view_carousel</span> Carousel</button>
+                            <button class="component-btn" data-type="tabs" title="Tabbed content navigation"><span class="material-icons-outlined">tab</span> Tabs</button>
+                            <button class="component-btn" data-type="accordion" title="Collapsible content sections"><span class="material-icons-outlined">expand_more</span> Accordion</button>
+                            <button class="component-btn" data-type="modal" title="A popup dialog window"><span class="material-icons-outlined">open_in_new</span> Modal</button>
+                            <button class="component-btn" data-type="datepicker" title="A date selection widget"><span class="material-icons-outlined">event</span> Date Picker</button>
+                            <button class="component-btn" data-type="colorpicker" title="A color selection tool"><span class="material-icons-outlined">palette</span> Color Picker</button>
+                            <button class="component-btn" data-type="progressbar" title="A progress indicator bar"><span class="material-icons-outlined">trending_flat</span> Progress Bar</button>
+                            <button class="component-btn" data-type="rating" title="A star rating input"><span class="material-icons-outlined">star_rate</span> Rating Stars</button>
+                            <button class="component-btn" data-type="map" title="An interactive map display"><span class="material-icons-outlined">map</span> Map View</button>
+                            <button class="component-btn" data-type="gallery" title="A collection of images"><span class="material-icons-outlined">collections</span> Image Gallery</button>
+                            <button class="component-btn" data-type="editor" title="A rich text editing interface"><span class="material-icons-outlined">edit_note</span> Rich Text Editor</button>
+                            <button class="component-btn" data-type="chart-js" title="Interactive charts using Chart.js"><span class="material-icons-outlined">insert_chart</span> Chart.js</button>
+                            <button class="component-btn" data-type="three-js" title="3D graphics using Three.js"><span class="material-icons-outlined">view_in_ar</span> Three.js Scene</button>
+                            <button class="component-btn" data-type="leaflet" title="Interactive maps using Leaflet.js"><span class="material-icons-outlined">map</span> Leaflet Map</button>
+                            <button class="component-btn" data-type="sortable" title="Drag-and-drop sorting with Sortable.js"><span class="material-icons-outlined">drag_indicator</span> Sortable List</button>
+                            <button class="component-btn" data-type="anime-js" title="Animations using Anime.js"><span class="material-icons-outlined">animation</span> Anime.js</button>
+                            <button class="component-btn" data-type="quill" title="Rich text editor using Quill.js"><span class="material-icons-outlined">format_shapes</span> Quill Editor</button>
+                        </div>
+                    </details>
+                    <details class="component-group">
+                        <summary style="color: #fff; cursor: pointer; padding: 8px;">
+                            <span style="margin-right: 5px;">▶</span> Materialize UI
+                        </summary>
+                        <div class="component-list">
+                            <button class="component-btn" data-type="mat-button" title="Materialize styled button"><span class="material-icons-outlined">smart_button</span> Button</button>
+                            <button class="component-btn" data-type="mat-card" title="Material design card component"><span class="material-icons-outlined">crop_portrait</span> Card</button>
+                            <button class="component-btn" data-type="mat-tabs" title="Material design tabs"><span class="material-icons-outlined">tab</span> Tabs</button>
+                            <button class="component-btn" data-type="mat-sidenav" title="Material design side navigation"><span class="material-icons-outlined">menu_open</span> Sidenav</button>
+                            <button class="component-btn" data-type="mat-modal" title="Material design modal dialog"><span class="material-icons-outlined">open_in_new</span> Modal</button>
+                            <button class="component-btn" data-type="mat-collapsible" title="Material design collapsible panels"><span class="material-icons-outlined">expand_more</span> Collapsible</button>
+                            <button class="component-btn" data-type="mat-chips" title="Material design chips/tags"><span class="material-icons-outlined">local_offer</span> Chips</button>
+                            <button class="component-btn" data-type="mat-dropdown" title="Material design dropdown menu"><span class="material-icons-outlined">arrow_drop_down_circle</span> Dropdown</button>
+                            <button class="component-btn" data-type="mat-datepicker" title="Material design date picker"><span class="material-icons-outlined">event</span> Datepicker</button>
+                            <button class="component-btn" data-type="mat-slider" title="Material design range slider"><span class="material-icons-outlined">tune</span> Slider</button>
+                            <button class="component-btn" data-type="mat-stepper" title="Material design step-by-step wizard"><span class="material-icons-outlined">linear_scale</span> Stepper</button>
+                            <button class="component-btn" data-type="mat-switch" title="Material design toggle switch"><span class="material-icons-outlined">toggle_on</span> Switch</button>
+                            <button class="component-btn" data-type="mat-badge" title="Material design notification badge"><span class="material-icons-outlined">fiber_manual_record</span> Badge</button>
+                            <button class="component-btn" data-type="mat-progress" title="Material design progress indicators"><span class="material-icons-outlined">donut_large</span> Progress</button>
+                            <button class="component-btn" data-type="mat-tooltip" title="Material design tooltips"><span class="material-icons-outlined">info</span> Tooltip</button>
+                        </div>
+                    </details>
+                </div>
+                <div id="canvas-container" style="flex-grow: 1; position: relative; background: #2d2d2d; overflow: auto;">
+                    <div id="properties-sidebar" class="properties-sidebar active">
+                        <div class="export-controls">
+                            <button id="export-layout" class="export-btn" title="Export the current layout to code"><span class="material-icons-outlined">code</span></button>
+                            <button class="modal-close" id="close-modal"><span class="material-icons-outlined">close</span></button>
+                        </div>
+                        <div class="property-group">
+                            <h3>General</h3>
+                            <div class="property-field">
+                                <label>ID</label>
+                                <input type="text" id="prop-id">
+                            </div>
+                            <div class="property-field">
+                                <label>Class</label>
+                                <input type="text" id="prop-class">
+                            </div>
+                        </div>
+                        <div class="property-group">
+                            <h3>Layout</h3>
+                            <div class="property-field">
+                                <label>Width</label>
+                                <input type="text" id="prop-width">
+                            </div>
+                            <div class="property-field">
+                                <label>Height</label>
+                                <input type="text" id="prop-height">
+                            </div>
+                        </div>
+                        <div class="property-group">
+                            <h3>Style</h3>
+                            <div class="property-field">
+                                <label>Background Color</label>
+                                <input type="color" id="prop-bgcolor">
+                            </div>
+                            <div class="property-field">
+                                <label>Text Color</label>
+                                <input type="color" id="prop-color">
+                            </div>
+                        </div>
+                        <div class="code-preview">
+                            <h3>Component Code</h3>
+                            <textarea id="component-code" readonly=""></textarea>
+                        </div>
+                    </div>
+                    <canvas id="grid-canvas"></canvas>
+                    <div id="components-layer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.7/beautify-html.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+    <script>
+        // Layout code generation
+        function generateLayoutCode() {
+            const componentsLayer = document.getElementById('components-layer');
+            const components = componentsLayer.querySelectorAll('.canvas-component');
+            
+            let htmlCode = '';
+            let cssCode = '';
+            let jsCode = '';
+            
+            const processComponent = (comp, parentId = null) => {
+                const type = comp.dataset.type;
+                const id = `component-${type}-${Math.random().toString(36).substr(2, 9)}`;
+                const style = comp.style;
+                
+                // Generate HTML
+                let componentHtml = `<div id="${id}" class="component ${type}-component">\n`;
+                
+                // Find nested components
+                const nestedComponents = Array.from(components).filter(other => {
+                    if (other === comp) return false;
+                    const isDocked = other.classList.contains('docked');
+                    return isDocked && componentManager.isDockedTo(other, comp);
+                });
+                
+                // Add nested components HTML
+                nestedComponents.forEach(nested => {
+                    componentHtml += processComponent(nested, id).html;
+                });
+                
+                componentHtml += `    <div class="component-content"></div>\n`;
+                componentHtml += `</div>\n`;
+                
+                // Generate CSS
+                const componentCss = `#${id} {\n` +
+                    `    position: absolute;\n` +
+                    `    left: ${style.left};\n` +
+                    `    top: ${style.top};\n` +
+                    `    width: ${style.width};\n` +
+                    `    height: ${style.height};\n` +
+                    `}\n\n`;
+                
+                // Generate JavaScript
+                let componentJs = '';
+                if (type.match(/counter|timer|toggle|slider/)) {
+                    componentJs = `// ${type.charAt(0).toUpperCase() + type.slice(1)} Component\n` +
+                        `const ${id} = document.getElementById('${id}');\n` +
+                        `// Add your ${type} logic here\n\n`;
+                }
+                
+                return {
+                    html: componentHtml,
+                    css: componentCss,
+                    js: componentJs,
+                    id: id
+                };
+            };
+            
+            // Process only top-level components
+            components.forEach(comp => {
+                if (!comp.classList.contains('docked')) {
+                    const generated = processComponent(comp);
+                    htmlCode += generated.html;
+                    cssCode += generated.css;
+                    jsCode += generated.js;
+                }
+            });
+            
+            // Combine all code
+            const fullCode = `<!-- Generated Layout HTML -->\n${htmlCode}\n` +
+                           `<style>\n/* Generated Layout CSS */\n${cssCode}</style>\n` +
+                           `<script>\n// Generated Layout JavaScript\n${jsCode}<\/script>`;
+            
+            return fullCode;
+        }
+
+        // Grid drawing function
+        function drawGrid(canvas, spacing = 16) {
+            const ctx = canvas.getContext('2d');
+            const width = canvas.parentElement.clientWidth;
+            const height = canvas.parentElement.clientHeight;
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.strokeStyle = '#3c3c3c';
+            ctx.lineWidth = 1;
+            
+            // Draw vertical lines
+            for (let x = spacing; x < width; x += spacing) {
+                ctx.beginPath();
+                ctx.setLineDash([2, 2]);
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+
+            // Draw horizontal lines
+            for (let y = spacing; y < height; y += spacing) {
+                ctx.beginPath();
+                ctx.setLineDash([2, 2]);
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        // Component management
+        // Icon mapping for component types
+        function getIconForType(type) {
+            const iconMap = {
+                'div': 'widgets',
+                'heading': 'title',
+                'paragraph': 'text_fields',
+                'image': 'image',
+                'link': 'link',
+                'list': 'format_list_bulleted',
+                'table': 'table_chart',
+                'form': 'dynamic_form',
+                'nav': 'menu',
+                'footer': 'horizontal_rule',
+                'card': 'crop_portrait',
+                'grid': 'grid_view',
+                'video': 'play_circle',
+                'audio': 'volume_up',
+                'chart': 'bar_chart',
+                'calendar': 'calendar_today',
+                'carousel': 'view_carousel',
+                'tabs': 'tab',
+                'accordion': 'expand_more',
+                'modal': 'open_in_new',
+                'datepicker': 'event',
+                'colorpicker': 'palette',
+                'progressbar': 'trending_flat',
+                'rating': 'star_rate',
+                'map': 'map',
+                'gallery': 'collections',
+                'editor': 'edit_note'
+            };
+            return iconMap[type] || 'widgets';
+        }
+
+
+        class ComponentManager {
+            constructor() {
+                this.setupEventListeners();
+            }
+
+            toggleDocking(element) {
+                element.classList.toggle('docked');
+                const dockToggle = element.querySelector('.dock-toggle');
+                dockToggle.textContent = element.classList.contains('docked') ? '⚯' : '⚓';
+                
+                // Update nested status of components
+                const components = document.querySelectorAll('.canvas-component');
+                components.forEach(comp => {
+                    comp.classList.remove('nested');
+                    const rect = comp.getBoundingClientRect();
+                    components.forEach(other => {
+                        if (other !== comp) {
+                            const otherRect = other.getBoundingClientRect();
+                            if (this.isContainedWithin(rect, otherRect)) {
+                                comp.classList.add('nested');
+                            }
+                        }
+                    });
+                });
+            }
+
+            isContainedWithin(inner, outer) {
+                return inner.left >= outer.left &&
+                       inner.right <= outer.right &&
+                       inner.top >= outer.top &&
+                       inner.bottom <= outer.bottom;
+            }
+
+            isDockedTo(child, parent) {
+                if (!child.classList.contains('docked')) return false;
+                const childRect = child.getBoundingClientRect();
+                const parentRect = parent.getBoundingClientRect();
+                return (
+                    childRect.left >= parentRect.left &&
+                    childRect.right <= parentRect.right &&
+                    childRect.top >= parentRect.top &&
+                    childRect.bottom <= parentRect.bottom
+                );
+            }
+
+            generateNestedCode(component) {
+                let code = '';
+                const dockedChildren = Array.from(document.querySelectorAll('.canvas-component.docked'))
+                    .filter(child => this.isDockedTo(child, component));
+                    
+                if (dockedChildren.length > 0) {
+                    dockedChildren.forEach(child => {
+                        code += this.generateNestedCode(child);
+                    });
+                }
+                return code;
+            }
+
+            setupEventListeners() {
+                // Export button handler
+                document.getElementById('export-layout').addEventListener('click', () => {
+                    const layoutCode = generateLayoutCode();
+                    window.editor.editor.setValue(layoutCode);
+                    document.getElementById('modal').style.display = 'none';
+                    document.getElementById('overlay').style.display = 'none';
+                });
+
+                // Component buttons
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('component-btn')) {
+                        this.createComponent(e.target.dataset.type);
+                    }
+                });
+
+                // Resize observer for canvas
+                const canvasContainer = document.getElementById('canvas-container');
+                const gridCanvas = document.getElementById('grid-canvas');
+                this.resizeObserver = new ResizeObserver((entries) => {
+                    window.requestAnimationFrame(() => {
+                        if (!entries.length) return;
+                        drawGrid(gridCanvas);
+                    });
+                });
+                this.resizeObserver.observe(canvasContainer);
+
+                // Cleanup when modal is closed
+                document.getElementById('close-modal').addEventListener('click', () => {
+                    this.resizeObserver.disconnect();
+                });
+            }
+
+            createComponent(type) {
+                const component = document.createElement('div');
+                component.className = 'canvas-component';
+                component.dataset.type = type;
+                
+                let contentHtml = '';
+                let defaultText = '';
+                switch(type) {
+                    case 'button':
+                        defaultText = 'Click Me';
+                        contentHtml = `<button>${defaultText}</button>`;
+                        break;
+                    case 'input':
+                        defaultText = 'Enter text...';
+                        contentHtml = `<input type="text" placeholder="${defaultText}">`;
+                        break;
+                    case 'webview':
+                        contentHtml = '<iframe src="about:blank" style="width:100%;height:100%;border:none;"></iframe>';
+                        break;
+                    case 'breadcrumb':
+                        contentHtml = `
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="#">Home</a></li>
+                                    <li class="breadcrumb-item active">Current</li>
+                                </ol>
+                            </nav>`;
+                        break;
+                    case 'chevron':
+                        contentHtml = `
+                            <div class="chevron-section">
+                                <div class="chevron-header">
+                                    <span class="material-icons-outlined">expand_more</span>
+                                    <span>Section Title</span>
+                                </div>
+                                <div class="chevron-content">Content here</div>
+                            </div>`;
+                        break;
+                    case 'select':
+                        contentHtml = `
+                            <select>
+                                <option>Option 1</option>
+                                <option>Option 2</option>
+                                <option>Option 3</option>
+                            </select>`;
+                        break;
+                    case 'counter':
+                        contentHtml = `
+                            <button class="counter-btn">-</button>
+                            <span class="counter-value">0</span>
+                            <button class="counter-btn">+</button>`;
+                        break;
+                    case 'timer':
+                        contentHtml = `
+                            <span class="material-icons-outlined">timer</span>
+                            <span>00:00</span>`;
+                        break;
+                    case 'toggle':
+                        contentHtml = '<div class="toggle-slider"></div>';
+                        break;
+                    case 'slider':
+                        contentHtml = '<input type="range" min="0" max="100" value="50">';
+                        break;
+                    default:
+                        contentHtml = `<span class="material-icons-outlined">${getIconForType(type)}</span>`;
+                }
+
+                component.innerHTML = `
+                    <div class="drag-handle">
+                        <span>${type.charAt(0).toUpperCase() + type.slice(1)}</span>
+                        <span class="dock-toggle" title="Toggle Docking">⚓</span>
+                    </div>
+                    <div class="component-content">${contentHtml}</div>
+                    <div class="resize-handle"></div>
+                `;
+
+                const componentsLayer = document.getElementById('components-layer');
+                componentsLayer.appendChild(component);
+
+                // Position at center of visible area
+                const container = document.getElementById('canvas-container');
+                component.style.left = (container.scrollLeft + container.clientWidth/2 - 50) + 'px';
+                component.style.top = (container.scrollTop + container.clientHeight/2 - 25) + 'px';
+
+                this.makeComponentDraggable(component);
+                this.makeComponentResizable(component);
+                
+                // Add component-specific functionality
+                if (type === 'toggle') {
+                    component.querySelector('.component-content').addEventListener('click', () => {
+                        component.classList.toggle('active');
+                    });
+                } else if (type === 'counter') {
+                    const [decBtn, value, incBtn] = component.querySelectorAll('.counter-btn, .counter-value');
+                    decBtn.addEventListener('click', () => value.textContent = parseInt(value.textContent) - 1);
+                    incBtn.addEventListener('click', () => value.textContent = parseInt(value.textContent) + 1);
+                }
+            }
+
+            makeComponentDraggable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                const dragHandle = element.querySelector('.drag-handle');
+                dragHandle.onmousedown = dragMouseDown;
+
+                // Add dock toggle handler
+                const dockToggle = element.querySelector('.dock-toggle');
+                dockToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleDocking(element);
+                });
+                
+                // Show properties when component is clicked
+                element.addEventListener('click', () => {
+                    document.querySelectorAll('.canvas-component').forEach(comp => {
+                        comp.style.borderColor = '#007acc';
+                    });
+                    element.style.borderColor = '#00ff00';
+                    const sidebar = document.getElementById('properties-sidebar');
+                    sidebar.classList.add('active');
+                    
+                    // Update property inputs
+                    document.getElementById('prop-width').value = element.style.width || '100px';
+                    document.getElementById('prop-height').value = element.style.height || '50px';
+                    
+                    // Add property change listeners
+                    const updateProperty = (prop, value) => {
+                        element.style[prop] = value;
+                    };
+                    
+                    document.getElementById('prop-width').onchange = (e) => updateProperty('width', e.target.value);
+                    document.getElementById('prop-height').onchange = (e) => updateProperty('height', e.target.value);
+                    document.getElementById('prop-bgcolor').onchange = (e) => updateProperty('backgroundColor', e.target.value);
+                    document.getElementById('prop-color').onchange = (e) => updateProperty('color', e.target.value);
+                });
+
+                function dragMouseDown(e) {
+                    if (e.target.className === 'resize-handle') return;
+                    e.preventDefault();
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }
+
+                function elementDrag(e) {
+                    e.preventDefault();
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    
+                    const newTop = element.offsetTop - pos2;
+                    const newLeft = element.offsetLeft - pos1;
+                    
+                    element.style.top = newTop + "px";
+                    element.style.left = newLeft + "px";
+
+                    // Move docked children
+                    const dockedChildren = document.querySelectorAll('.canvas-component.docked');
+                    dockedChildren.forEach(child => {
+                        if (child.classList.contains('docked')) {
+                            const childRect = child.getBoundingClientRect();
+                            const elementRect = element.getBoundingClientRect();
+                            if (childRect.left >= elementRect.left &&
+                                childRect.right <= elementRect.right &&
+                                childRect.top >= elementRect.top &&
+                                childRect.bottom <= elementRect.bottom) {
+                                const relativeTop = parseInt(child.style.top) - parseInt(element.style.top);
+                                const relativeLeft = parseInt(child.style.left) - parseInt(element.style.left);
+                                child.style.top = (newTop + relativeTop) + "px";
+                                child.style.left = (newLeft + relativeLeft) + "px";
+                            }
+                        }
+                    });
+                }
+
+                function closeDragElement() {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            }
+
+            makeComponentResizable(element) {
+                const resizer = element.querySelector('.resize-handle');
+                let original_width = 0;
+                let original_height = 0;
+                let original_x = 0;
+                let original_y = 0;
+                let original_mouse_x = 0;
+                let original_mouse_y = 0;
+
+                resizer.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
+                    original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
+                    original_x = element.getBoundingClientRect().left;
+                    original_y = element.getBoundingClientRect().top;
+                    original_mouse_x = e.pageX;
+                    original_mouse_y = e.pageY;
+                    window.addEventListener('mousemove', resize);
+                    window.addEventListener('mouseup', stopResize);
+                });
+
+                function resize(e) {
+                    const width = original_width + (e.pageX - original_mouse_x);
+                    const height = original_height + (e.pageY - original_mouse_y);
+                    if (width > 100) {
+                        element.style.width = width + 'px';
+                    }
+                    if (height > 50) {
+                        element.style.height = height + 'px';
+                    }
+                }
+
+                function stopResize() {
+                    window.removeEventListener('mousemove', resize);
+                }
+            }
+        }
+
+        class Tab {
+            constructor(name, content = '', mode = 'htmlmixed') {
+                this.name = name;
+                this.content = content;
+                this.mode = mode;
+            }
+        }
+
+        class Editor {
+            constructor() {
+                this.tabs = [];
+                this.activeTab = null;
+                this.editor = null;
+                this.minimap = null;
+                this.minimapOverlay = null;
+                this.isDragging = false;
+                
+                this.initializeEditor();
+                this.setupEventListeners();
+                this.createNewTab('untitled.html');
+                this.setupMinimapOverlay();
+            }
+
+            initializeEditor() {
+                const editorOptions = {
+                    mode: 'htmlmixed',
+                    theme: 'monokai',
+                    lineNumbers: true,
+                    autoCloseTags: true,
+                    autoCloseBrackets: true,
+                    matchBrackets: true,
+                    indentUnit: 4,
+                    tabSize: 4,
+                    lineWrapping: true,
+                    gutters: ["CodeMirror-linenumbers"],
+                    lineNumberFormatter: function(line) {
+                        return line.toString().padStart(6, '0');
+                    },
+                    extraKeys: {
+                        "Ctrl-S": () => this.saveFile(),
+                        "Cmd-S": () => this.saveFile()
+                    }
+                };
+
+                this.editor = CodeMirror(document.getElementById('editor'), editorOptions);
+                this.minimap = CodeMirror(document.getElementById('minimap'), {
+                    ...editorOptions,
+                    readOnly: true,
+                    scrollbarStyle: null,
+                    theme: 'monokai'
+                });
+
+                this.editor.on('change', () => {
+                    if (this.activeTab) {
+                        this.activeTab.content = this.editor.getValue();
+                        this.updateMinimap();
+                    }
+                });
+
+                this.editor.on('cursorActivity', () => {
+                    const pos = this.editor.getCursor();
+                    document.getElementById('cursor-position').textContent = 
+                        `Line: ${pos.line + 1}, Column: ${pos.ch + 1}`;
+                });
+
+                this.editor.on('scroll', () => {
+                    const scrollInfo = this.editor.getScrollInfo();
+                    const ratio = scrollInfo.top / (scrollInfo.height - scrollInfo.clientHeight);
+                    const minimapScrollInfo = this.minimap.getScrollInfo();
+                    const minimapScroll = ratio * (minimapScrollInfo.height - minimapScrollInfo.clientHeight);
+                    this.minimap.scrollTo(null, minimapScroll);
+                });
+            }
+
+            setupEventListeners() {
+                document.getElementById('new-file').addEventListener('click', () => this.createNewTab());
+                document.getElementById('open-file').addEventListener('click', () => document.getElementById('file-input').click());
+                document.getElementById('save-file').addEventListener('click', () => this.saveFile());
+                document.getElementById('format-code').addEventListener('click', () => this.formatCode());
+                document.getElementById('file-input').addEventListener('change', (e) => this.handleFileOpen(e));
+                document.getElementById('theme-select').addEventListener('change', (e) => this.changeTheme(e.target.value));
+                
+                // Modal events
+                document.getElementById('show-modal').addEventListener('click', () => {
+                    document.getElementById('modal').style.display = 'block';
+                    document.getElementById('overlay').style.display = 'block';
+                });
+                
+                document.getElementById('close-modal').addEventListener('click', () => {
+                    document.getElementById('modal').style.display = 'none';
+                    document.getElementById('overlay').style.display = 'none';
+                });
+                
+                document.getElementById('overlay').addEventListener('click', () => {
+                    document.getElementById('modal').style.display = 'none';
+                    document.getElementById('overlay').style.display = 'none';
+                });
+            }
+
+            setupMinimapOverlay() {
+                const minimapContainer = document.querySelector('.minimap');
+                this.minimapOverlay = document.createElement('div');
+                this.minimapOverlay.className = 'minimap-overlay';
+                minimapContainer.appendChild(this.minimapOverlay);
+
+                this.minimapOverlay.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.handleMinimapDrag(e);
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        this.handleMinimapDrag(e);
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                });
+            }
+
+            handleMinimapDrag(e) {
+                const minimap = document.querySelector('.minimap');
+                const minimapRect = minimap.getBoundingClientRect();
+                const relativeY = (e.clientY - minimapRect.top) / minimapRect.height;
+                const scrollInfo = this.editor.getScrollInfo();
+                const scrollTarget = relativeY * (scrollInfo.height - scrollInfo.clientHeight);
+                this.editor.scrollTo(null, scrollTarget);
+            }
+
+            changeTheme(theme) {
+                this.editor.setOption('theme', theme);
+                this.minimap.setOption('theme', theme);
+            }
+
+            formatCode() {
+                const mode = this.activeTab.mode;
+                const content = this.editor.getValue();
+                let formatted = content;
+
+                const options = {
+                    indent_size: 4,
+                    indent_char: ' ',
+                    max_preserve_newlines: 2,
+                    preserve_newlines: true,
+                    keep_array_indentation: false,
+                    break_chained_methods: false,
+                    indent_scripts: 'normal',
+                    brace_style: 'collapse',
+                    space_before_conditional: true,
+                    unescape_strings: false,
+                    jslint_happy: false,
+                    end_with_newline: true,
+                    wrap_line_length: 0,
+                    indent_inner_html: false,
+                    comma_first: false,
+                    e4x: false,
+                    indent_empty_lines: false
+                };
+
+                switch (mode) {
+                    case 'javascript':
+                        formatted = js_beautify(content, options);
+                        break;
+                    case 'css':
+                        formatted = css_beautify(content, options);
+                        break;
+                    case 'htmlmixed':
+                        formatted = html_beautify(content, options);
+                        break;
+                }
+
+                this.editor.setValue(formatted);
+            }
+
+            createNewTab(name = null) {
+                const fileName = name || `untitled-${this.tabs.length + 1}.html`;
+                const template = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Document</title>
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    
+    <!-- Materialize CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    
+    <!-- Your custom styles -->
+    <style>
+        /* Add your styles here */
+    </style>
+</head>
+<body>
+    
+    <!-- Your content here -->
+    
+    <!-- Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"><\/script>
+    
+    <!-- Your custom scripts -->
+    <script>
+        // Add your scripts here
+    <\/script>'
+`;
+                const newTab = new Tab(fileName, template);
+                this.tabs.push(newTab);
+                this.renderTabs();
+                this.switchToTab(this.tabs.length - 1);
+            }
+
+            renderTabs() {
+                const tabsContainer = document.getElementById('tabs');
+                tabsContainer.innerHTML = '';
+                
+                this.tabs.forEach((tab, index) => {
+                    const tabElement = document.createElement('button');
+                    tabElement.className = `tab ${this.activeTab === tab ? 'active' : ''}`;
+                    tabElement.innerHTML = `
+                        ${tab.name}
+                        <span class="close" data-index="${index}">×</span>
+                    `;
+                    
+                    tabElement.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('close')) {
+                            this.switchToTab(index);
+                        }
+                    });
+
+                    tabsContainer.appendChild(tabElement);
+                });
+
+                const closeButtons = document.querySelectorAll('.close');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.closeTab(parseInt(e.target.dataset.index));
+                    });
+                });
+            }
+
+            switchToTab(index) {
+                if (index >= 0 && index < this.tabs.length) {
+                    this.activeTab = this.tabs[index];
+                    this.editor.setValue(this.activeTab.content);
+                    this.editor.setOption('mode', this.activeTab.mode);
+                    this.minimap.setValue(this.activeTab.content);
+                    this.minimap.setOption('mode', this.activeTab.mode);
+                    this.renderTabs();
+                }
+            }
+
+            closeTab(index) {
+                if (this.tabs.length > 1) {
+                    this.tabs.splice(index, 1);
+                    if (index === this.tabs.length) {
+                        this.switchToTab(index - 1);
+                    } else {
+                        this.switchToTab(index);
+                    }
+                }
+            }
+
+            updateMinimap() {
+                this.minimap.setValue(this.editor.getValue());
+            }
+
+            async handleFileOpen(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const content = await file.text();
+                    const mode = this.getFileMode(file.name);
+                    const newTab = new Tab(file.name, content, mode);
+                    this.tabs.push(newTab);
+                    this.renderTabs();
+                    this.switchToTab(this.tabs.length - 1);
+                }
+                event.target.value = '';
+            }
+
+            getFileMode(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const modes = {
+                    'html': 'htmlmixed',
+                    'css': 'css',
+                    'js': 'javascript'
+                };
+                return modes[ext] || 'htmlmixed';
+            }
+
+            saveFile() {
+                if (!this.activeTab) return;
+                
+                const content = this.editor.getValue();
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = this.activeTab.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // Add error handling for ResizeObserver
+        const originalResizeObserver = window.ResizeObserver;
+        window.ResizeObserver = class ResizeObserver extends originalResizeObserver {
+            constructor(callback) {
+                super((entries, observer) => {
+                    // Wrap callback in requestAnimationFrame to prevent loop
+                    window.requestAnimationFrame(() => {
+                        if (!entries.length) return;
+                        callback(entries, observer);
+                    });
+                });
+            }
+        };
+
+        // Initialize editor and component manager
+        window.componentManager = new ComponentManager();
+        window.editor = new Editor();
+    
+                    </script></body></html>
